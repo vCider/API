@@ -2,9 +2,20 @@
 The vCider API client library and examples
 ==========================================
 
-Low-level client
-----------------
-In the api_client.py we provide a lowe-level client for the
+Tree:
+-----
+    /
+        - README
+        - python/
+            - vcider/
+                - __init__.py
+                - api_client.py
+                - api_tester.py
+
+
+Low-level client:
+-----------------
+In api_client.py we provide a low-level client for the
 vCider API. This client does not know anything about nodes or
 networks, but only knows how to send properly authenticated
 HTTP requests to the server. Use this client to build higher
@@ -30,6 +41,5 @@ contains a 'status_code', 'content' and '_headers' attribute.
 In the above example, the <server_uri> is something like
 "https://my.vcider.com". The <api_id> and <api_key> can be
 found in your API credentials management page.
-
 
 
