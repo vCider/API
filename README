@@ -2,3 +2,34 @@
 The vCider API client library and examples
 ==========================================
 
+Low-level client
+----------------
+In the api_client.py we provide a lowe-level client for the
+vCider API. This client does not know anything about nodes or
+networks, but only knows how to send properly authenticated
+HTTP requests to the server. Use this client to build higher
+level clients.
+
+Pleae note that the client uses the 'requests' HTTP library,
+which can be found here: http://docs.python-requests.org
+
+In your client applications, do this:
+
+    from vcider.api_client import VciderApiClient
+
+    vac = VciderApiClient(<server_uri>, <api_id>, <api_key>)
+
+    resp = vac.get("/api/root")
+    ...
+    resp = vac.put("/api/nodes/bb3ef2c99fde53a4a6031f4e2cbc80fb/",
+                   json.dumps({"name":"foo"}))
+
+The resp object that is returned by the HTTP method call functions
+contains a 'status_code', 'content' and '_headers' attribute. 
+
+In the above example, the <server_uri> is something like
+"https://my.vcider.com". The <api_id> and <api_key> can be
+found in your API credentials management page.
+
+
+
