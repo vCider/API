@@ -1,11 +1,15 @@
 
 The vCider API client library and examples
 ==========================================
+This software is licensed under the Apache Software License.
+See the LICENSE file for the software license details.
+
 
 Tree:
 -----
     /
         - README
+        - LICENSE
         - python/
             - vcider/
                 - __init__.py

@@ -17,17 +17,17 @@
 #    limitations under the License.
 
 """
-A tiny test program, which doesn't do anyting meaningful, but shows you
-how to use the low-level VciderApiClient.
+A ttest program, which shows how to use the high-level VciderClient for
+the vCider API.
 
 """
 
 import json
 
 #
-# Import the low-level client class
+# Import the high-level client class
 #
-from api_client import VciderApiClient
+from client import VciderClient
 
 #
 # Provide these values that are specific to your server and your account.
@@ -41,21 +41,5 @@ ROOT    = "http://localhost:8000"               # The vCider API server's root U
 # Create an instance of the client. The 'autosync' flag indicates that we should automatically
 # try to handle any time sync issues with the server.
 #
-vac = VciderApiClient(ROOT, API_ID, API_KEY, autosync=True)
-
-#
-# Access the root of the API to get information about the basic links into the system.
-# Check that the result is 200 (HTTP OK status code). Convert the result buffer into
-# via JSON into a dictionary: The low-level client does not perform this conversion itself.
-#
-r = vac.get("/api/root/")
-d = json.loads(r.content)
-print json.dumps(d, sort_keys=True, indent=4)  # We use JSON for nicely formatted printing
-
-#
-# The following would add a node to a network: We post the node-ID to the node-list
-# resource of a network.
-#
-#r = vac.post("/api/nets/195a591a936b50219ab9ba90ee944097/nodes/",
-#            json.dumps({ "node_id" : "fb89514e9f5c5594bbbb660acbba4f2f" }))
+vc = VciderClient(ROOT, API_ID, API_KEY)
 
