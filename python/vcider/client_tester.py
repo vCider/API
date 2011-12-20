@@ -20,6 +20,11 @@
 A ttest program, which shows how to use the high-level VciderClient for
 the vCider API.
 
+Still TODO:
+
+- Functions regarding gateways
+- Functions to modify anything (currently only read-only)
+
 """
 
 import json
@@ -32,14 +37,42 @@ from client import VciderClient
 #
 # Provide these values that are specific to your server and your account.
 #
-APP_ID  = "0"                                   # Currently is always zero.
-API_ID  = "59a7b4173e3254c0b4e222bf60b31136"    # Your public API-ID.
-API_KEY = "a775b5a5c19856a1acff88da7db72cc2"    # Your secret API access key. Please keep secret!
-ROOT    = "http://localhost:8000"               # The vCider API server's root URI.
+APP_ID  = "0"                                # Currently is always zero.
+API_ID  = "091ca03fa801527abbd76109d439efe8" # Your public API-ID.
+API_KEY = "afe380c143965e289fcc70c9e1ed3f2d" # Your secret API access key. Please keep secret!
+ROOT    = "https://beta.vcider.com"          # The vCider API server's root URI.
 
 #
-# Create an instance of the client. The 'autosync' flag indicates that we should automatically
-# try to handle any time sync issues with the server.
+# Create an instance of the client.
 #
+
 vc = VciderClient(ROOT, API_ID, API_KEY)
+
+api_root = vc._get_root()
+print "\n======== The root API resource:\n", json.dumps(api_root, indent=4)
+
+nums = vc.get_num_nodes_and_nets()
+print "\n======== Current number of nodes and networks:\n", json.dumps(nums, indent=4)
+
+nodes = vc.get_list_of_nodes()
+print "\n======== List of my nodes:\n", json.dumps(nodes, indent=4)
+
+node_id = nodes[0]    # Take one of the node IDs and use it for further requests
+
+node_detail = vc.get_node_detail(node_id)
+print "\n======== Details of one node:\n", json.dumps(node_detail, indent=4)
+
+nets_of_node = vc.get_networks_of_node(node_id, info=True)
+print "\n======== Networks of that node with details:\n", json.dumps(nets_of_node, indent=4)
+
+net_id = nets_of_node.keys()[0]  # Take one of the network IDs and use it for further requests
+
+nodes_of_net = vc.get_nodes_of_network(net_id, info=True)
+print "\n======== Nodes of that network with details:\n", json.dumps(nodes_of_net, indent=4)
+
+ports_of_node = vc.get_ports_of_node(node_id, info=False)
+print "\n======== Port list of the node:\n", json.dumps(ports_of_node, indent=4)
+
+ports_of_net = vc.get_ports_of_network(net_id, info=False)
+print "\n======== Port list of the network:\n", json.dumps(ports_of_net, indent=4)
 

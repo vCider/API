@@ -32,10 +32,10 @@ from api_client import VciderApiClient
 #
 # Provide these values that are specific to your server and your account.
 #
-APP_ID  = "0"                                   # Currently is always zero.
-API_ID  = "59a7b4173e3254c0b4e222bf60b31136"    # Your public API-ID.
-API_KEY = "a775b5a5c19856a1acff88da7db72cc2"    # Your secret API access key. Please keep secret!
-ROOT    = "http://localhost:8000"               # The vCider API server's root URI.
+APP_ID  = "0"                                # Currently is always zero.
+API_ID  = "091ca03fa801527abbd76109d439efe8" # Your public API-ID.
+API_KEY = "afe380c143965e289fcc70c9e1ed3f2d" # Your secret API access key. Please keep secret!
+ROOT    = "https://beta.vcider.com"          # The vCider API server's root URI.
 
 #
 # Create an instance of the client. The 'autosync' flag indicates that we should automatically

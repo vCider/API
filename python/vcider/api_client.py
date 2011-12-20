@@ -245,6 +245,7 @@ class VciderApiClient(object):
         Normal response code should be 204.
 
         @param uri:             The API URI (path and query string only).
+        @param data:            The data to be sent to the server as a string.
 
         @return                 Returns a response object of the 'requests' library.
 
@@ -259,6 +260,7 @@ class VciderApiClient(object):
         entity can be found in the 'Location' HTTP response header.
 
         @param uri:             The API URI (path and query string only).
+        @param data:            The data to be sent to the server as a string.
 
         @return                 Returns a response object of the 'requests' library.
 

@@ -1,49 +1,113 @@
 
 The vCider API client library and examples
 ==========================================
-This software is licensed under the Apache Software License.
-See the LICENSE file for the software license details.
+    This software is licensed under the Apache Software License.
+    See the LICENSE file for the software license details.
 
 
-Tree:
------
-    /
-        - README
-        - LICENSE
-        - python/
-            - vcider/
-                - __init__.py
-                - api_client.py
-                - api_tester.py
+Contained in this directory tree:
+---------------------------------
+    - README                    # the file you are reading right now
+    - LICENSE                   # text of the Apache license
+    - python/                   # language specific directory
+        - vcider/               # module directory
+            - __init__.py
+            - api_client.py     # low-level client
+            - api_tester.py     # sample usage of low-level client
+            - client.py         # high-level client
+            - client_tester.py  # sample usage of high-level client
+
+
+Overview:
+---------
+    This directory contains two types of clients for the vCider
+    API: A low-level client ("VciderApiClient" in file "api_client.py"),
+    which knows how to construct proper HTTP requests for the vCider API
+    server. In particular, it knows how to build the message signatures
+    and required HTTP request headers for authentication and authorization.
+
+    The second client ("VciderClient" in file "client.py") is meant as
+    an example implementation of how to interact with the vCider API. It
+    extends the low-level client and provides higher-level functionality
+    by being aware of the vCider concept and resources.
+
+    As you work with either one of these clients, you can visit the
+    vCider API URL ( https://my.vcider.com/api/root/ ) with your browser
+    at any time and visually compare what you see with the actions you
+    have implemented via these clients.
+
+    Both clients are implemented in Python. We hope to add versions
+    for other programming languages soon.
+
+
+Prerequisites:
+--------------
+    The vCider API clients require the "requests" HTTP library,
+    which can be found here: http://python-requests.org
+
+
+Getting started:
+----------------
+    Log into your vCider management console and go to your account
+    settings. There, in the row labelled "API credentials", click on
+    "create/manage credentials". Click the "Create new credentials"
+    button. This creates a new set of API credential tokens, an API ID
+    (similar to a 'username') and an API KEY (similar to a 'password').
+    You need to configure your client application with those two tokens.
+    
+    Please note that you may create as many API credentials as you
+    want. This allows you to have different credentials for different
+    clients. You can delete individual credentials at any time. Further,
+    you can individually set the access rights associated with an API
+    credential. Click on 'edit' and select the access rights you want
+    to grant to the holder of those credentials or even temporarily
+    suspend access rights altogether.
+
+    Once you have an API ID and API KEY, please make those two values
+    available to your client applications, for examaple as shown here:
+
+        from vcider.client import VciderClient
+
+        API_ID  = "84fce1460b095900bd493ffec080efae"
+        API_KEY = "e10c8142bf1053bb8eb4b04ca2155c8f"
+
+        vac = VciderClient("https://my.vcider.com", API_ID, API_KEY)
+
+    It is a good idea not to hard-code the API KEY into the program
+    text, but instead make it available to your client application
+    via an environment variable or config file.
 
 
 Low-level client:
 -----------------
-In api_client.py we provide a low-level client for the
-vCider API. This client does not know anything about nodes or
-networks, but only knows how to send properly authenticated
-HTTP requests to the server. Use this client to build higher
-level clients.
+    In api_client.py we provide a low-level client for the
+    vCider API. This client does not know anything about nodes or
+    networks, but only knows how to send properly authenticated
+    HTTP requests to the server. It provides get(), put(), post()
+    and delete() methods, which map to the HTTP request methods
+    of the same name. Use this client to build higher level clients.
 
-Pleae note that the client uses the 'requests' HTTP library,
-which can be found here: http://docs.python-requests.org
+    In your client applications, do this:
 
-In your client applications, do this:
+        from vcider.api_client import VciderApiClient
 
-    from vcider.api_client import VciderApiClient
+        vac = VciderApiClient(<server_uri>, <api_id>, <api_key>)
 
-    vac = VciderApiClient(<server_uri>, <api_id>, <api_key>)
+        resp = vac.get("/api/root")
+        ...
+        resp = vac.put("/api/nodes/bb3ef2c99fde53a4a6031f4e2cbc80fb/",
+                       json.dumps({"name":"foo"}))
 
-    resp = vac.get("/api/root")
-    ...
-    resp = vac.put("/api/nodes/bb3ef2c99fde53a4a6031f4e2cbc80fb/",
-                   json.dumps({"name":"foo"}))
+    The resp object that is returned by the HTTP method call functions
+    contains a 'status_code', 'content' and '_headers' attribute. 
 
-The resp object that is returned by the HTTP method call functions
-contains a 'status_code', 'content' and '_headers' attribute. 
+    In the above example, the <server_uri> is something like
+    "https://my.vcider.com". The <api_id> and <api_key> can be
+    found in your API credentials management page.
 
-In the above example, the <server_uri> is something like
-"https://my.vcider.com". The <api_id> and <api_key> can be
-found in your API credentials management page.
+    Note that the get(), put() and post() functions return and accept
+    data as plain strings. You need to perform any converstion to/from
+    JSON yourself.
+
 
 
