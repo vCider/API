@@ -17,7 +17,7 @@
 #    limitations under the License.
 
 """
-A ttest program, which shows how to use the high-level VciderClient for
+A test program, which shows how to use the high-level VciderClient for
 the vCider API.
 
 Still TODO:
