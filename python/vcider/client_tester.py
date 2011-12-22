@@ -37,16 +37,16 @@ from client import VciderClient
 #
 # Provide these values that are specific to your server and your account.
 #
-APP_ID  = "0"                                # Currently is always zero.
-API_ID  = "091ca03fa801527abbd76109d439efe8" # Your public API-ID.
-API_KEY = "afe380c143965e289fcc70c9e1ed3f2d" # Your secret API access key. Please keep secret!
-ROOT    = "https://beta.vcider.com"          # The vCider API server's root URI.
+APP_ID       = "0"                                # Currently is always zero.
+API_ID       = "091ca03fa801527abbd76109d439efe8" # Your public API-ID.
+API_KEY      = "afe380c143965e289fcc70c9e1ed3f2d" # Your secret API access key. Please keep secret!
+API_BASE_URI = "https://beta.vcider.com/api/"     # The vCider API base address
 
 #
 # Create an instance of the client.
 #
 
-vc = VciderClient(ROOT, API_ID, API_KEY)
+vc = VciderClient(API_BASE_URI, API_ID, API_KEY)
 
 api_root = vc._get_root()
 print "\n======== The root API resource:\n", json.dumps(api_root, indent=4)
@@ -56,6 +56,7 @@ print "\n======== Current number of nodes and networks:\n", json.dumps(nums, ind
 
 nodes = vc.get_list_of_nodes()
 print "\n======== List of my nodes:\n", json.dumps(nodes, indent=4)
+
 
 node_id = nodes[0]    # Take one of the node IDs and use it for further requests
 

@@ -32,23 +32,23 @@ from api_client import VciderApiClient
 #
 # Provide these values that are specific to your server and your account.
 #
-APP_ID  = "0"                                # Currently is always zero.
-API_ID  = "091ca03fa801527abbd76109d439efe8" # Your public API-ID.
-API_KEY = "afe380c143965e289fcc70c9e1ed3f2d" # Your secret API access key. Please keep secret!
-ROOT    = "https://beta.vcider.com"          # The vCider API server's root URI.
+APP_ID       = "0"                                # Currently is always zero.
+API_ID       = "091ca03fa801527abbd76109d439efe8" # Your public API-ID.
+API_KEY      = "afe380c143965e289fcc70c9e1ed3f2d" # Your secret API access key. Please keep secret!
+API_BASE_URI = "https://beta.vcider.com/api/"     # The vCider API base address
 
 #
 # Create an instance of the client. The 'autosync' flag indicates that we should automatically
 # try to handle any time sync issues with the server.
 #
-vac = VciderApiClient(ROOT, API_ID, API_KEY, autosync=True)
+vac = VciderApiClient(API_BASE_URI, API_ID, API_KEY, autosync=True)
 
 #
 # Access the root of the API to get information about the basic links into the system.
 # Check that the result is 200 (HTTP OK status code). Convert the result buffer into
 # via JSON into a dictionary: The low-level client does not perform this conversion itself.
 #
-r = vac.get("/api/root/")
+r = vac.get("/")
 d = json.loads(r.content)
 print json.dumps(d, sort_keys=True, indent=4)  # We use JSON for nicely formatted printing
 

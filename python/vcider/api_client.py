@@ -26,7 +26,7 @@ of a higher level client can be found in client.py.
 
 import time, json
 import hmac, hashlib
-import requests
+import requests, urllib
 
 class VciderApiClient(object):
     """
@@ -40,12 +40,27 @@ class VciderApiClient(object):
 
         from vcider.api_client import VciderApiClient
 
-        vac = VciderApiClient(<server_uri>, <api_id>, <api_key>)
+        vac = VciderApiClient(<api_base_uri>, <api_id>, <api_key>)
 
-        vac.get("/api/root")
+        vac.get("/")   # For the API root resource
         ...
         vac.put("/api/nodes/bb3ef2c99fde53a4a6031f4e2cbc80fb/", json.dumps({"name":"foo"}))
+
+    or
+
+        vac.put("nodes/bb3ef2c99fde53a4a6031f4e2cbc80fb/", json.dumps({"name":"foo"}))
         ...
+
+    However, the better approach is to learn the relevant links from the root resource,
+    rather than having to hard-code specific URI patterns in your code. Let the 'root'
+    resource be the only URI of the API you will ever need to remember:
+
+        root = vac.get("root/")
+
+        nodes_list = root['links']['nodes_list']['uri']
+
+        vac.put(nodes_list + "bb3ef2c99fde53a4a6031f4e2cbc80fb/", json.dumps({"name":"foo"}))
+
 
     The get(), put(), post() and delete() methods provided by the client class correspond
     to the HTTP methods of the same name and return a response object as defined by the
@@ -78,12 +93,11 @@ class VciderApiClient(object):
         """
         pass
 
-    def __init__(self, server_root, api_id, api_key, app_id=0, autosync=False):
+    def __init__(self, api_base_uri, api_id, api_key, app_id=0, autosync=False):
         """
         Initialize the client.
 
-        @param server_root:     The server portion of the API server's URI. For example,
-                                "https://my.vcider.com".
+        @param api_base:        The base URI of the API. For example: https://my.vcider.com/api
         @param api_id:          The public part of the API credentials. This is similar
                                 to a username for your client software.
         @param api_key:         The secret part of the API crendetials. This is similar
@@ -95,14 +109,18 @@ class VciderApiClient(object):
                                 to the server was rejected because of excessive time drift.
 
         """
-        if server_root.endswith("/"):
-            server_root = server_root[:-1]   # Always store without a trailing slash
-        self.server_root = server_root
-        self.api_id      = api_id
-        self.api_key     = api_key
-        self.app_id      = app_id
-        self.autosync    = autosync
-        self.time_diff   = 0
+        if not api_base_uri.endswith("/"):
+            api_base_uri += "/"
+        self.api_base_uri      = api_base_uri
+        self.api_id            = api_id
+        self.api_key           = api_key
+        self.app_id            = app_id
+        self.autosync          = autosync
+        self.time_diff         = 300
+        self.server_info_uri   = "server_info/"
+        uri_type, base_path                 = urllib.splittype(self.api_base_uri)
+        server_name, self.api_base_uri_path = urllib.splithost(base_path)
+        self.api_server_root   = "%s://%s" % (uri_type, server_name)
 
     def _construct_auth_hdr(self, http_method, uri, data=None, hash_type="SHA256"):
         """
@@ -132,9 +150,6 @@ class VciderApiClient(object):
             "SHA512" : hashlib.sha512,
             "MD5"    : hashlib.md5
         }
-
-        if not uri.startswith("/"):
-            raise VciderApiClient.MalformedRequest("URI should start with '/'")
 
         # See if the request has any parameters, we split it into path and query-string component
         elems = uri.split("?")
@@ -174,11 +189,10 @@ class VciderApiClient(object):
         @param  http_method:    The HTTP request method, which is used for this request.
                                 Should be either "GET", "POST", "PUT" or "DELETE".
         @param  uri:            The URI to which the request should be sent. Not that this
-                                is only the PATH component (and any query string). So, the
-                                protocol ('http://', or 'https://') as well as the server
-                                name (and optional port) are omitted. For example, if the
-                                full URI is "http://localhost:8000/foo/bar?x=1&abc=test"
-                                then the uri is: /foo/bar?x=1&abc=test
+                                is only the PATH component (and any query string) that is
+                                in addition to the stored API base URI.
+                                full URI is "http://localhost:8000/api/foo/bar?x=1&abc=test"
+                                then the uri is: foo/bar?x=1&abc=test
         @param  data:           Any data to be sent to the server. Only needed for PUt and POST
                                 requests. For all other methods, this should be None.
         @param  nosync:         If set, we never attemtp to synchronize the time stamps
@@ -191,13 +205,25 @@ class VciderApiClient(object):
         @return                 Returns a response object of the 'requests' library.
 
         """
+        if uri.startswith("/") and len(uri) > 1:
+            # This is an absolute URI, so we can take it as is...
+            pass
+        else:
+            # This is a relative URI, so we prepend the full path of the
+            # API base (or it is just a request to the API root, which is
+            # also done with just "/", in which case we make that one
+            # slash disappear)
+            if uri == "/":
+                uri = ""
+            uri = self.api_base_uri_path + uri
+
         auth_hdr = self._construct_auth_hdr(http_method, uri, data=data)
         headers  = {
             "Authorization" : auth_hdr,
             "Content-type"  : "application/json",
             "Accept"        : "application/json"
         }
-        ret = VciderApiClient._CALL_METHODS[http_method](self.server_root+uri,
+        ret = VciderApiClient._CALL_METHODS[http_method](self.api_server_root + uri,
                                                          headers=headers,
                                                          data=data)
         if ret.status_code == 403 and "Excessive time drift" in ret.content:
@@ -275,10 +301,12 @@ class VciderApiClient(object):
         to all future requests.
 
         """
-        ret            = self.get("/api/server_info/")
+        ret            = self.get(self.server_info_uri)
         data           = json.loads(ret.content)
         server_time    = int(data['volatile']['server_time'])
         my_time        = int(time.time())
         self.time_diff = my_time - server_time
+
+
 
 

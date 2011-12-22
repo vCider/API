@@ -77,7 +77,7 @@ class VciderClient(VciderApiClient):
         Return the root dictionary of the API.
 
         """
-        return self._make_get_req("/api/root")
+        return self._make_get_req("/")
 
     def _list_process(self, api_list, info):
         """
