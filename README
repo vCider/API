@@ -71,7 +71,7 @@ Getting started:
         API_ID  = "84fce1460b095900bd493ffec080efae"
         API_KEY = "e10c8142bf1053bb8eb4b04ca2155c8f"
 
-        vac = VciderClient("https://my.vcider.com", API_ID, API_KEY)
+        vac = VciderClient("https://my.vcider.com/api", API_ID, API_KEY)
 
     It is a good idea not to hard-code the API KEY into the program
     text, but instead make it available to your client application
@@ -91,12 +91,30 @@ Low-level client:
 
         from vcider.api_client import VciderApiClient
 
-        vac = VciderApiClient(<server_uri>, <api_id>, <api_key>)
+        vac = VciderApiClient(<api_base_uri>, <api_id>, <api_key>)
 
-        resp = vac.get("/api/root")
+        resp = vac.get("/")
         ...
         resp = vac.put("/api/nodes/bb3ef2c99fde53a4a6031f4e2cbc80fb/",
                        json.dumps({"name":"foo"}))
+
+    or
+
+        vac.put("nodes/bb3ef2c99fde53a4a6031f4e2cbc80fb/",
+                json.dumps({"name":"foo"}))
+        ...
+
+    However, the better approach is to learn the relevant links from
+    the root resource, rather than having to hard-code specific URI
+    patterns in your code. Let the 'root' resource be the only URI of
+    the API you will ever need to remember:
+
+        root = vac.get("/")
+
+        nodes_list = root['links']['nodes_list']['uri']
+
+        vac.put(nodes_list + "bb3ef2c99fde53a4a6031f4e2cbc80fb/",
+                json.dumps({"name":"foo"}))
 
     The resp object that is returned by the HTTP method call functions
     contains a 'status_code', 'content' and '_headers' attribute. 

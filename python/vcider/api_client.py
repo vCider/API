@@ -55,7 +55,7 @@ class VciderApiClient(object):
     rather than having to hard-code specific URI patterns in your code. Let the 'root'
     resource be the only URI of the API you will ever need to remember:
 
-        root = vac.get("root/")
+        root = vac.get("/")
 
         nodes_list = root['links']['nodes_list']['uri']
 
