@@ -51,6 +51,19 @@ class VciderClient(VciderApiClient):
     # Some private helper functions
     # -----------------------------
 
+    def _make_qs_for_list(self, info):
+        """
+        Create the query strinig for an access to a list.
+
+        If the 'info' flag is set then the _related query string modifier
+        is specified. In all cases, the _id modifier is set.
+
+        """
+        qs = "?"+self.id_qs
+        if info:
+            qs += "&"+self.related_qs
+        return qs
+
     def _make_get_req(self, uri, expect=200):
         """
         Issue a GET request and ensure the response status code is as expected.
@@ -85,11 +98,14 @@ class VciderClient(VciderApiClient):
 
         Lists in the vCider API always have the same format: You can either
         get a list of URIs of each element, or you can request some additional
-        information (add '_related' to the query string).
+        information (add '_related' to the query string or add '_id' to the
+        the resource IDs).
 
         Depending on the value of info, this either just returns a list of
         all IDs, or it returns a dictionary with IDs as key and the related
         information as value (also in a dictionary).
+
+        We assume that the list contains '_id' elements.
 
         @param api_list:        A list as returned by the API.
         @param info:            If True, return a dictionary with additional
@@ -100,12 +116,10 @@ class VciderClient(VciderApiClient):
                                 and per-item information as values.
 
         """
-        # We assume that we can get the ID in the 'third' element of the item URI.
-        # A URI may look like this: "/api/nodes/<node-id>/"
         if info:
-            dd = dict( (e['uri'].split("/")[3], e['_related']) for e in api_list )
+            dd = dict( (e['_id'], e['_related']) for e in api_list )
         else:
-            dd = [ e['uri'].split("/")[3] for e in api_list ]
+            dd = [ e['_id'] for e in api_list ]
 
         return dd
 
@@ -133,6 +147,14 @@ class VciderClient(VciderApiClient):
         self.credentials    = self.links['credentials']['uri']
         self.server         = self.links['server']['uri']
 
+        # Learn about the available query string modifiers
+        uri_mods           = self._make_get_req(self.server)['uri_modifiers']
+        self.id_qs         = uri_mods['id']['param']
+        self.linkinfo_qs   = uri_mods['link_info']['param']
+        self.related_qs    = uri_mods['related_info']['param']
+        self.list_end_qs   = uri_mods['list_end_index']['param']
+        self.list_start_qs = uri_mods['list_start_index']['param']
+
     def get_num_nodes_and_nets(self):
         """
         Return the current number of nodes and networks.
@@ -157,7 +179,7 @@ class VciderClient(VciderApiClient):
                                 (also as dictionary) as value.
 
         """
-        qs = "?_related" if info else ""
+        qs = self._make_qs_for_list(info)
         return self._list_process(self._make_get_req(self.nodes_list+qs), info)
 
     def get_list_of_networks(self, info=False):
@@ -174,7 +196,7 @@ class VciderClient(VciderApiClient):
                                 (also as dictionary) as value.
 
         """
-        qs = "?_related" if info else ""
+        qs = self._make_qs_for_list(info)
         return self._list_process(self._make_get_req(self.networks_list+qs), info)
 
     def get_node_detail(self, node_id):
@@ -220,7 +242,7 @@ class VciderClient(VciderApiClient):
         """
         # Avoid hard-coding URIs. Instead, we get the node info and follow a link
         d            = self._make_get_req("%s%s/" % (self.nodes_list, node_id))
-        qs           = "?_related" if info else ""
+        qs           = self._make_qs_for_list(info)
         net_list_uri = self._make_get_req(d['links']['networks_list']['uri']+qs)
         return self._list_process(net_list_uri, info)
 
@@ -241,7 +263,7 @@ class VciderClient(VciderApiClient):
         """
         # Avoid hard-coding URIs. Instead, we get the network info and follow a link
         d             = self._make_get_req("%s%s/" % (self.networks_list, net_id))
-        qs            = "?_related" if info else ""
+        qs            = self._make_qs_for_list(info)
         node_list_uri = self._make_get_req(d['links']['nodes_list']['uri']+qs)
         return self._list_process(node_list_uri, info)
 
@@ -261,7 +283,7 @@ class VciderClient(VciderApiClient):
 
         """
         d             = self._make_get_req("%s%s/" % (self.nodes_list, node_id))
-        qs            = "?_related" if info else ""
+        qs            = self._make_qs_for_list(info)
         port_list_uri = self._make_get_req(d['links']['ports_list']['uri']+qs)
         return self._list_process(port_list_uri, info)
 
@@ -281,7 +303,7 @@ class VciderClient(VciderApiClient):
 
         """
         d             = self._make_get_req("%s%s/" % (self.networks_list, net_id))
-        qs            = "?_related" if info else ""
+        qs            = self._make_qs_for_list(info)
         port_list_uri = self._make_get_req(d['links']['ports_list']['uri']+qs)
         return self._list_process(port_list_uri, info)
 
