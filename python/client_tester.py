@@ -95,7 +95,7 @@ print "--------------------------------------------------------- 4"
 print nnodes
 port = net.add_node(node)
 print port
-port.delete()
+#port.delete()
 
 nports = node.get_all_ports()
 print nports
