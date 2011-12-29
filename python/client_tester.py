@@ -27,12 +27,12 @@ Still TODO:
 
 """
 
-import json, time
+import json
 
 #
 # Import the high-level client class
 #
-from client import VciderClient, VciderNode
+from vcider.client import VciderClient
 
 #
 # Provide these values that are specific to your server and your account.

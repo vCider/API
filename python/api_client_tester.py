@@ -27,7 +27,7 @@ import json
 #
 # Import the low-level client class
 #
-from api_client import VciderApiClient
+from vcider.api_client import VciderApiClient
 
 #
 # Provide these values that are specific to your server and your account.
@@ -41,6 +41,7 @@ API_BASE_URI = "https://beta.vcider.com/api/"     # The vCider API base address
 # Create an instance of the client. The 'autosync' flag indicates that we should automatically
 # try to handle any time sync issues with the server.
 #
+print "Connecting to vCider API..."
 vac = VciderApiClient(API_BASE_URI, API_ID, API_KEY, autosync=True)
 
 #
@@ -48,7 +49,18 @@ vac = VciderApiClient(API_BASE_URI, API_ID, API_KEY, autosync=True)
 # Check that the result is 200 (HTTP OK status code). Convert the result buffer into
 # via JSON into a dictionary: The low-level client does not perform this conversion itself.
 #
+print "Retrieving root resource..."
 r = vac.get("/")
+d = json.loads(r.content)
+print json.dumps(d, sort_keys=True, indent=4)  # We use JSON for nicely formatted printing
+
+#
+# After learning the link to the node list from the root resource,
+# we now issue the request to get this list.
+#
+print "Retrieving list of node IDs..."
+node_list_link = d['links']['nodes_list']['uri']
+r = vac.get(node_list_link)
 d = json.loads(r.content)
 print json.dumps(d, sort_keys=True, indent=4)  # We use JSON for nicely formatted printing
 
