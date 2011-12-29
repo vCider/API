@@ -225,7 +225,7 @@ class VciderResource(object):
             if not qs:
                 qs = new_qs
             else:
-                qs += new_qs
+                qs += "&" + new_qs
 
             self._resource_data      = self._vcider_client._make_get_req("%s?%s" % (path, qs))
             self._is_updated         = True
@@ -249,7 +249,7 @@ class VciderResource(object):
         """
         # Retrive the template for this resource type
         template = self._get_template(self._RESOURCE_TYPE,
-                                  self._vcider_client.templ_uri_pattern[self._RESOURCE_TYPE] % self.id)
+                                      self._vcider_client.templ_uri_pattern[self._RESOURCE_TYPE] % self.id)
 
         # Now search for the data we need to supply in our current resource data. As we are
         # finding those items, we are creating a temporary copy of the template, since we

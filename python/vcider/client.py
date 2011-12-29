@@ -290,7 +290,7 @@ class VciderClient(VciderApiClient):
         """
         super(VciderClient, self).__init__(*args, **kwargs)
 
-        # We are a higher level client: Always attempt auto sync
+        # We are a higher level client: Always attempt auto sync in case of time drift
         self.autosync                         = True
 
         # We don't want to hard-code URIs. Instead, we learn them
@@ -337,6 +337,9 @@ class VciderClient(VciderApiClient):
         self.templ_uri_pattern[RESOURCE_NODE] = uri_patterns['node_template']['uri'].replace("#node_id#", "%s")
         self.templ_uri_pattern[RESOURCE_NET]  = uri_patterns['network_template']['uri'].replace("#net_id#", "%s")
         self.templ_uri_pattern[RESOURCE_PORT] = uri_patterns['port_template']['uri'].replace("#port_id#", "%s")
+
+        # Prepare a cache for the new network template (which is loaded on demand by create_network())
+        self.new_net_template                 = None
 
     def get_num_nodes_and_nets(self):
         """
@@ -406,4 +409,59 @@ class VciderClient(VciderApiClient):
         """
         return VciderNetwork(self, net_id, self.uri_pattern[RESOURCE_NET] % net_id)
 
+    def create_network(self, name, net_addresses, auto_addr=True, encrypted=True, may_use_pub_addr=True, tags=""):
+        """
+        Create a new network.
+
+        All the parameters specified for the network during creation may be changed
+        at a later time.
+
+        @param name:             A user defined name for the new network.
+        @param net_addresses:    The address space of the network in CIDR notation, or None if no automatic
+                                 address assignment should be performed. Specify an empty string as value
+                                 if you don't want to set it (in that case you also need to set auto_addr to False).
+        @param auto_addr:        If True then perform automatic address assignment for new nodes, otherwise
+                                 do not do so.
+        @param encrypted:        If True then all traffic amongst nodes of this network is encrypted.
+        @param may_use_pub_addr: If True then the nodes of the network are allowed to establish contact with each
+                                 other via their public address. Since this may be a NATed address, this will
+                                 not work in some data centers. However, Amazon EC2 users should leave this
+                                 set to True. If it is false then the public address of the node (as it shows
+                                 itself to the vCider controller) will never be used for inter-node communication.
+                                 Node that the setting of this flag does not impact the route optimization that
+                                 is automatically performed by vCider: Even if the initial contact between nodes
+                                 may happen via the public addresses, vCider always tries to optimize traffic and
+                                 at least attempts to use private addresses later on if possible.
+        @param tags:             Tags for this network (comma separated list of words and phrases). If a node
+                                 presents tags to the vCider controller on first contact, those node tags will
+                                 be matched against the network tags. If a match is found then the node is
+                                 automatically assigned to one or more networks.
+
+        @return:                 A network resource object.
+
+        """
+        if not self.new_net_template:
+            # Get and cache the template for a new network, if we don't have it already
+            new_net_templ_uri = self.links['networks_list']['uri'] + "?" + self.template_link_attr
+            self.new_net_template = self._make_get_req(new_net_templ_uri)
+
+        tmp_template = dict(
+            name                 = name,
+            net_addresses        = net_addresses,
+            opt_auto_addr        = auto_addr,
+            opt_encrypted        = encrypted,
+            opt_may_use_pub_addr = may_use_pub_addr,
+            tags                 = tags
+        )
+
+        # Make sure the keys in the template match the ones we have assembled here.
+        tmpl_keys = self.new_net_template.keys()
+        for k in tmp_template.keys():
+            if k not in tmpl_keys:
+                raise VciderApiException("Template key mismatch '%s'. Server/client mismatch?" % k)
+
+        # The POST of this data returns the location of the new network. We then initialize
+        # a new network object with this location data.
+        loc = self._make_post_req(self.networks_list, tmp_template)
+        return VciderNetwork(self, None, loc)
 
