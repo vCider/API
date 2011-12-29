@@ -27,20 +27,25 @@ Still TODO:
 
 """
 
-import json
+import json, time
 
 #
 # Import the high-level client class
 #
-from client import VciderClient
+from client import VciderClient, VciderNode
 
 #
 # Provide these values that are specific to your server and your account.
 #
 APP_ID       = "0"                                # Currently is always zero.
+"""
 API_ID       = "091ca03fa801527abbd76109d439efe8" # Your public API-ID.
 API_KEY      = "afe380c143965e289fcc70c9e1ed3f2d" # Your secret API access key. Please keep secret!
 API_BASE_URI = "https://beta.vcider.com/api/"     # The vCider API base address
+"""
+API_ID       = "59a7b4173e3254c0b4e222bf60b31136" # Your public API-ID.
+API_KEY      = "a775b5a5c19856a1acff88da7db72cc2" # Your secret API access key. Please keep secret!
+API_BASE_URI = "http://localhost:8000/api/"     # The vCider API base address
 
 #
 # Create an instance of the client.
@@ -48,21 +53,57 @@ API_BASE_URI = "https://beta.vcider.com/api/"     # The vCider API base address
 
 vc = VciderClient(API_BASE_URI, API_ID, API_KEY)
 
+
 api_root = vc._get_root()
 print "\n======== The root API resource:\n", json.dumps(api_root, indent=4)
 
 nums = vc.get_num_nodes_and_nets()
 print "\n======== Current number of nodes and networks:\n", json.dumps(nums, indent=4)
 
-nodes = vc.get_list_of_nodes()
-print "\n======== List of my nodes:\n", json.dumps(nodes, indent=4)
+nodes = vc.get_list_of_nodes(info=True)
+"""
+for id, node in nodes.items():
+    print "\n" + str(node)
+"""
+
+print "====================================="
+node = vc.get_node("b23825f6a2cf54b5b645c07e83fc2311")
+print "--------------------- 1"
+print node
+print "--------------------- 2"
+node.name = "foobar_blah"
+print node
+node.save()
+nnets = node.get_list_of_networks(info=True)
+print nnets
+
+nets = vc.get_list_of_networks(info=True)
+for id, net in nets.items():
+    print "\n" + str(net)
+
+net = vc.get_network("9337c6e1b8455978a318ce03e76626b7")
+print "--------------------- 3"
+print net
+net.auto_addr = True
+net.net_addresses = "11.2/16"
+net.save()
+print net.get_list_of_ports(info=True)
 
 
-node_id = nodes[0]    # Take one of the node IDs and use it for further requests
+nnodes = net.get_list_of_nodes(info=True)
+print "--------------------------------------------------------- 4"
+print nnodes
+port = net.add_node(node)
+print port
+port.delete()
 
-node_detail = vc.get_node_detail(node_id)
-print "\n======== Details of one node:\n", json.dumps(node_detail, indent=4)
+nports = node.get_list_of_ports(info=True)
+print nports
 
+
+
+
+"""
 nets_of_node = vc.get_networks_of_node(node_id, info=True)
 print "\n======== Networks of that node with details:\n", json.dumps(nets_of_node, indent=4)
 
@@ -76,4 +117,13 @@ print "\n======== Port list of the node:\n", json.dumps(ports_of_node, indent=4)
 
 ports_of_net = vc.get_ports_of_network(net_id, info=False)
 print "\n======== Port list of the network:\n", json.dumps(ports_of_net, indent=4)
+
+print node_detail
+node = VciderNode(vc, node_id, node_detail['links']['self']['uri'])
+dir(node)
+print node.id
+print node.name
+print node.bar
+"""
+
 
