@@ -10,12 +10,14 @@ Contained in this directory tree:
     - README                    # the file you are reading right now
     - LICENSE                   # text of the Apache license
     - python/                   # language specific directory
+        - api_client_tester.py  # sample usage of low-level client
+        - client_tester.py      # sample usage of high-level client
         - vcider/               # module directory
             - __init__.py
             - api_client.py     # low-level client
-            - api_tester.py     # sample usage of low-level client
             - client.py         # high-level client
-            - client_tester.py  # sample usage of high-level client
+            - exceptions.py     # exceptions for use by high-level client
+            - resources.py      # objects representig server resources
 
 
 Overview:
@@ -29,10 +31,11 @@ Overview:
     The second client ("VciderClient" in file "client.py") is meant as
     an example implementation of how to interact with the vCider API. It
     extends the low-level client and provides higher-level functionality
-    by being aware of the vCider concept and resources.
+    by being aware of the vCider concept and resources. In particular,
+    it provides an object-based view of the server-side resources.
 
     As you work with either one of these clients, you can visit the
-    vCider API URL ( https://my.vcider.com/api/root/ ) with your browser
+    vCider API URL ( https://beta.vcider.com/api/ ) with your browser
     at any time and visually compare what you see with the actions you
     have implemented via these clients.
 
