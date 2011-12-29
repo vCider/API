@@ -23,10 +23,57 @@ class.
 This VciderClient class adds higher-level constructs, such as retrieving
 node or network lists, assigning nodes to networks, and so on.
 
+Concepts
+========
+The client provides special classes to represent server-side resources:
+
+    VciderNode:     Representing a node resource.
+    VciderNetwork:  Representing a vCider network resource.
+    VciderPort:     Representing a port, the connection of a node to
+                    a network.
+
+Each of these resources expose a number of properies, which are filled
+after a resource has been received. Most properties are read-only, but
+some can be set. Once a change has been made, the save() method of the
+object can be called to write the changes back to the resource on the
+server. Furthermore, the delete() method of the objects can be used to
+remove the resource from the server.
+
+Exceptions are raised if any of the operations does not proceed as
+expected.
+
+Example
+=======
+
+    from vcider.client import VciderClient
+
+    vc = VciderClient(API_BASE_URI, API_ID, API_KEY)
+
+    nodes     = vc.get_all_nodes()                              # Dictionary of all my nodes
+    nets      = vc.get_all_networks()                           # Dictionary of all networks
+
+    node      = vc.get_node("b23825f6a2cf54b5b645c07e83fc2311")     # Get node based on its ID
+    node.name = "test_node"                                         # Change name and save
+    node.save()
+
+    net       = vc.get_network("9337c6e1b8455978a318ce03e76626b7")  # Get net based on its ID
+    nnodes    = net.get_all_nodes()                             # All nodes in this network
+    nports    = net.get_all_ports()                             # All ports of this network
+    port      = net.add_node(node)                                  # Port represents new connection
+
+    print port                                                      # Prints interface information
+
+    port.delete()                                                   # Remove node from network
+
+
+Todo
+====
 It could be useful to add some caching in this client, so that if we ask
 the same question multiple times, we don't always end up sending out HTTP
 requests. The _make_get_req() function would be a good place to insert
 a caching layer.
+
+Gateway-related operations are currently not implemented in the client.
 
 """
 
@@ -336,18 +383,19 @@ class VciderNode(VciderResource):
                    ( self.name, self.status_level, self.status_msg, self._update_status_msg )
         return ret
 
-    def get_list_of_networks(self, info=False):
+    def get_all_networks(self, info=True):
         """
-        Return the list of all networks that this node is a member of.
+        Return all networks that this node is a member of.
 
-        @param info:            If this flag is set then some additional
-                                information about each network is returned,
-                                not just the network IDs.
+        @param info:            If this flag is unset then only a list of network
+                                IDs is returned. If it is set then a dictionary
+                                of full objects representing the resources is
+                                returned.
 
-        @return:                List of network IDs. If 'info' is set then a
-                                dictionary is returned with the network IDs
-                                as keys and the additional network information
-                                (also as dictionary) as value.
+        @return:                Dictionary keyed by the network ID, containing
+                                the object representations of the resource as
+                                value. If 'info' is set to False then only a list
+                                of network IDs is returned.
 
         """
         net_list_uri = self._get_data("networks_list", "links/networks_list/uri")
@@ -355,18 +403,19 @@ class VciderNode(VciderResource):
         return self._vcider_client._list_process(self._vcider_client._make_get_req(uri),
                                                  VciderNetwork if info else None)
 
-    def get_list_of_ports(self, info=False):
+    def get_all_ports(self, info=True):
         """
-        Return the list of all the ports of this node.
+        Return all the ports (network connections) of this node.
 
-        @param info:            If this flag is set then some additional
-                                information about each port is returned,
-                                not just the port IDs.
+        @param info:            If this flag is unset then only a list of port
+                                IDs is returned. If it is set then a dictionary
+                                of full objects representing the resources is
+                                returned.
 
-        @return:                List of port IDs. If 'info' is set then a
-                                dictionary is returned with the port IDs
-                                as keys and the additional port information
-                                (also as dictionary) as value.
+        @return:                Dictionary keyed by the port ID, containing
+                                the object representations of the resource as
+                                value. If 'info' is set to False then only a list
+                                of port IDs is returned.
 
         """
         port_list_uri = self._get_data("port_list", "links/ports_list/uri")
@@ -430,18 +479,19 @@ class VciderNetwork(VciderResource):
                    ( self.name, self.status_level, self.status_msg, self._update_status_msg )
         return ret
 
-    def get_list_of_nodes(self, info=False):
+    def get_all_nodes(self, info=True):
         """
-        Return the list of all nodes that are part of this network.
+        Return all nodes that are part of this network.
 
-        @param info:            If this flag is set then some additional
-                                information about each node is returned,
-                                not just the node IDs.
+        @param info:            If this flag is unset then only a list of nodes
+                                IDs is returned. If it is set then a dictionary
+                                of full objects representing the resources is
+                                returned.
 
-        @return:                List of node IDs. If 'info' is set then a
-                                dictionary is returned with the node IDs
-                                as keys and the additional node information
-                                (also as dictionary) as value.
+        @return:                Dictionary keyed by the port ID, containing
+                                the object representations of the resource as
+                                value. If 'info' is set to False then only a list
+                                of node IDs is returned.
 
         """
         node_list_uri = self._get_data("nodes_list", "links/nodes_list/uri")
@@ -449,18 +499,19 @@ class VciderNetwork(VciderResource):
         return self._vcider_client._list_process(self._vcider_client._make_get_req(uri),
                                                  VciderNode if info else None)
 
-    def get_list_of_ports(self, info=False):
+    def get_all_ports(self, info=True):
         """
-        Return the list of all the ports of this node.
+        Return all the ports (node connections) of this network.
 
-        @param info:            If this flag is set then some additional
-                                information about each port is returned,
-                                not just the port IDs.
+        @param info:            If this flag is unset then only a list of port
+                                IDs is returned. If it is set then a dictionary
+                                of full objects representing the resources is
+                                returned.
 
-        @return:                List of port IDs. If 'info' is set then a
-                                dictionary is returned with the port IDs
-                                as keys and the additional port information
-                                (also as dictionary) as value.
+        @return:                Dictionary keyed by the port ID, containing
+                                the object representations of the resource as
+                                value. If 'info' is set to False then only a list
+                                of port IDs is returned.
 
         """
         port_list_uri = self._get_data("port_list", "links/ports_list/uri")
@@ -535,6 +586,7 @@ class VciderPort(VciderResource):
         ret += ", node: %s, network: %s, vcider-addr: %s (%s)" % \
                    ( self.node_id, self.network_id, self.vcider_vaddr, self.mac_addr )
         return ret
+
 
 class VciderClient(VciderApiClient):
 
@@ -829,18 +881,19 @@ class VciderClient(VciderApiClient):
         d = self._get_root()
         return ( d['volatile']['num_nodes'], d['volatile']['num_nets'] )
 
-    def get_list_of_nodes(self, info=False):
+    def get_all_nodes(self, info=True):
         """
-        Return the list of all nodes.
+        Return all the nodes.
 
-        @param info:            If this flag is set then some additional
-                                information about each node is returned,
-                                not just the node IDs.
+        @param info:            If this flag is unset then only a list of nodes
+                                IDs is returned. If it is set then a dictionary
+                                of full objects representing the resources is
+                                returned.
 
-        @return:                List of node IDs. If 'info' is set then a
-                                dictionary is returned with the node IDs
-                                as keys and the additional node information
-                                (also as dictionary) as value.
+        @return:                Dictionary keyed by the port ID, containing
+                                the object representations of the resource as
+                                value. If 'info' is set to False then only a list
+                                of node IDs is returned.
 
         """
         uri = self._make_qs_uri_for_list(self.nodes_list, info)
@@ -857,18 +910,19 @@ class VciderClient(VciderApiClient):
         """
         return VciderNode(self, node_id, self.uri_pattern[_RESOURCE_NODE] % node_id)
 
-    def get_list_of_networks(self, info=False):
+    def get_all_networks(self, info=True):
         """
-        Return the list of all networks.
+        Return all networks.
 
-        @param info:            If this flag is set then some additional
-                                information about each network is returned,
-                                not just the network IDs.
+        @param info:            If this flag is unset then only a list of network
+                                IDs is returned. If it is set then a dictionary
+                                of full objects representing the resources is
+                                returned.
 
-        @return:                List of network IDs. If 'info' is set then a
-                                dictionary is returned with the network IDs
-                                as keys and the additional network information
-                                (also as dictionary) as value.
+        @return:                Dictionary keyed by the port ID, containing
+                                the object representations of the resource as
+                                value. If 'info' is set to False then only a list
+                                of network IDs is returned.
 
         """
         uri = self._make_qs_uri_for_list(self.networks_list, info)
@@ -884,84 +938,5 @@ class VciderClient(VciderApiClient):
 
         """
         return VciderNetwork(self, net_id, self.uri_pattern[_RESOURCE_NET] % net_id)
-
-
-    def get_networks_of_node(self, node_id, info=False):
-        """
-        Return list of networks that a node belongs to.
-
-        @param node_id:         The ID of a vCider node as a string.
-        @param info:            If this flag is set then some additional
-                                information about each network is returned,
-                                not just the network IDs.
-
-        @return:                List of network IDs. If 'info' is set then a
-                                dictionary is returned with the network IDs
-                                as keys and the additional network information
-                                (also as dictionary) as value.
-
-        """
-        # Avoid hard-coding URIs. Instead, we get the node info and follow a link
-        d            = self._make_get_req("%s%s/" % (self.nodes_list, node_id))
-        net_list_uri = self._make_qs_uri_for_list(d['links']['networks_list']['uri'], info)
-        return self._list_process(net_list_uri, info)
-
-    def get_nodes_of_network(self, net_id, info=False):
-        """
-        Return list of nodes that belong to a network.
-
-        @param net_id:          The ID of a vCider network as a string.
-        @param info:            If this flag is set then some additional
-                                information about each node is returned,
-                                not just the node IDs.
-
-        @return:                List of node IDs. If 'info' is set then a
-                                dictionary is returned with the node IDs
-                                as keys and the additional node information
-                                (also as dictionary) as value.
-
-        """
-        # Avoid hard-coding URIs. Instead, we get the network info and follow a link
-        d             = self._make_get_req("%s%s/" % (self.networks_list, net_id))
-        node_list_uri = self._make_qs_uri_for_list(d['links']['nodes_list']['uri'], info)
-        return self._list_process(node_list_uri, info)
-
-    def get_ports_of_node(self, node_id, info=False):
-        """
-        Return list of ports that are configured for a node.
-
-        @param node_id:         The ID of a vCider node as a string.
-        @param info:            If this flag is set then some additional
-                                information about each port is returned,
-                                not just the port IDs.
-
-        @return:                List of port IDs. If 'info' is set then a
-                                dictionary is returned with the port IDs
-                                as keys and the additional port information
-                                (also as dictionary) as value.
-
-        """
-        d             = self._make_get_req("%s%s/" % (self.nodes_list, node_id))
-        port_list_uri = self._make_qs_uri_for_list(d['links']['ports_list']['uri'], info)
-        return self._list_process(port_list_uri, info)
-
-    def get_ports_of_network(self, net_id, info=False):
-        """
-        Return list of ports that are configured for a network.
-
-        @param net_id:          The ID of a vCider network as a string.
-        @param info:            If this flag is set then some additional
-                                information about each port is returned,
-                                not just the port IDs.
-
-        @return:                List of port IDs. If 'info' is set then a
-                                dictionary is returned with the port IDs
-                                as keys and the additional port information
-                                (also as dictionary) as value.
-
-        """
-        d             = self._make_get_req("%s%s/" % (self.networks_list, net_id))
-        port_list_uri = self._make_qs_uri_for_list(d['links']['ports_list']['uri'], info)
-        return self._list_process(port_list_uri, info)
 
 

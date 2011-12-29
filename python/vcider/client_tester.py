@@ -60,7 +60,7 @@ print "\n======== The root API resource:\n", json.dumps(api_root, indent=4)
 nums = vc.get_num_nodes_and_nets()
 print "\n======== Current number of nodes and networks:\n", json.dumps(nums, indent=4)
 
-nodes = vc.get_list_of_nodes(info=True)
+nodes = vc.get_all_nodes()
 """
 for id, node in nodes.items():
     print "\n" + str(node)
@@ -74,10 +74,10 @@ print "--------------------- 2"
 node.name = "foobar_blah"
 print node
 node.save()
-nnets = node.get_list_of_networks(info=True)
+nnets = node.get_all_networks()
 print nnets
 
-nets = vc.get_list_of_networks(info=True)
+nets = vc.get_all_networks()
 for id, net in nets.items():
     print "\n" + str(net)
 
@@ -87,17 +87,17 @@ print net
 net.auto_addr = True
 net.net_addresses = "11.2/16"
 net.save()
-print net.get_list_of_ports(info=True)
+print net.get_all_ports()
 
 
-nnodes = net.get_list_of_nodes(info=True)
+nnodes = net.get_all_nodes()
 print "--------------------------------------------------------- 4"
 print nnodes
 port = net.add_node(node)
 print port
 port.delete()
 
-nports = node.get_list_of_ports(info=True)
+nports = node.get_all_ports()
 print nports
 
 
