@@ -342,6 +342,14 @@ class VciderNode(VciderResource):
     """
     An object representing a node resource.
 
+    Only settable property is 'name'. Everything else is determined by the
+    node itself and cannot be changed via the API or even the vCider UI.
+
+    Please note that the delete() method can only be executed successfully
+    if contact to the node was lost for some reason. If the node is still
+    actively connected to the vCider controller then the delete operation
+    will fail (an exception will be thrown).
+
     """
     _RESOURCE_TYPE = _RESOURCE_NODE
     
@@ -427,6 +435,15 @@ class VciderNetwork(VciderResource):
     """
     An object representing a network resource.
 
+    Settable attributes are:
+
+        - name
+        - net_addresses    (address space of the network defined in CIDR format)
+        - auto_addr        (flag indicating whether new nodes should receive an automatic IP address assignment)
+        - encrypted        (flag indicating whether all inter-node traffic on the network should be encrypted)
+        - may_use_pub_addr (flag indicating whether nodes may attempt to contact each other on public addresses)
+        - tags             (the tags for this network, which may be used for automatic node assignment)
+
     """
     _RESOURCE_TYPE = _RESOURCE_NET
     _KEY_TRANSLATE = {
@@ -451,10 +468,9 @@ class VciderNetwork(VciderResource):
     encrypted     = property(lambda self:       self._get_data("opt_encrypted", "opt_encrypted"),
                              lambda self, val : self._set_data("opt_encrypted", "opt_encrypted", val),
                              doc="If True all address within the network is encrypted")
-    may_use_pub_addr = property( \
-        lambda self:       self._get_data("opt_may_use_pub_addr", "opt_may_use_pub_addr"),
-        lambda self, val : self._set_data("opt_may_use_pub_addr", "opt_may_use_pub_addr", val),
-        doc="If True then nodes may try to use public (even NAT) addresses to connect with each other")
+    may_use_pub_addr = property(lambda self:      self._get_data("opt_may_use_pub_addr","opt_may_use_pub_addr"),
+                                lambda self, val: self._set_data("opt_may_use_pub_addr","opt_may_use_pub_addr",val),
+                                doc="If True, nodes may try to use public addresses to connect with each other")
     tags          = property(lambda self:      self._get_data("tags", "tags"),
                              lambda self, val: self._set_data("tags", "tags", val),
                              doc="Any tags defined for this network")
@@ -558,6 +574,11 @@ class VciderPort(VciderResource):
     """
     An object representing a port resource.
 
+    The only settable property is 'vcider_vaddr', which is the virtual IP address under vCider
+    control. The virtual vCider interface that was created on the node for this port can have
+    any number of IP addresses assigned to it (for example as aliases), but only one of those
+    addresses is under vCider's control.
+
     """
     _RESOURCE_TYPE = _RESOURCE_PORT
     
@@ -589,6 +610,11 @@ class VciderPort(VciderResource):
 
 
 class VciderClient(VciderApiClient):
+    """
+    A high level client for the vCider API, which uses objects to represent
+    server resources to the client.
+
+    """
 
     class ApiException(Exception):
         """
